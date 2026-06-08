@@ -15,7 +15,7 @@
             /* さらに右へ */
             top: 80%;
             /* 画面中央に固定 */
-            transform: translateY(-50%) translateX(10px);
+            transform: translateY(-50%) translateX(16px);
             /* 中央配置と右ずらし */
             background: #13ca5e;
             display: flex;
@@ -96,7 +96,7 @@
             background-color: #fdfdfd;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 90%;
+            width: 96%;
             max-width: 500px;
             padding: 25px;
             box-sizing: border-box;
@@ -799,9 +799,18 @@
         </h1>
         <!-- 追加するボタン -->
 
-        <div class="label">お客様名<span class="required">必須</span></div>
+        <div class="label">お子様名<span class="required">必須</span></div>
 
-        <input type="text" id="name" placeholder="お名前を入力してください" oninput="saveInput('name')">
+        <input type="text" id="name" placeholder="お子様のお名前を入力してください" oninput="saveInput('name')">
+
+        <div class="label">お子様の年齢<span class="required">必須</span></div>
+        <input type="text" id="age" placeholder="お子様の年齢を入力してください" oninput="saveInput('age')">
+
+        <div class="label">お子様の性別<span class="required">必須</span></div>
+        <div class="visit-buttons">
+            <button type="button" id="genderMale" onclick="selectGender(this)">男の子</button>
+            <button type="button" id="genderFemale" onclick="selectGender(this)">女の子</button>
+        </div>
 
         <div class="labeltyuuou">電話番号</div>
         <input type="tel" id="phone" placeholder="電話番号を入力してください" oninput="saveInput('phone')">
@@ -899,6 +908,7 @@
     <script src="https://static.line-scdn.net/liff/edge/2.1/sdk.js"></script>
     <script>
         let visitCount = '';
+        let selectedGender = '';
         let selectedMenu = '';
         let selectedSymptom = [];  // 配列として定義
         let selectedFullDate = '';
@@ -954,9 +964,21 @@
         document.addEventListener('DOMContentLoaded', function () {
             const savedName = localStorage.getItem('name');
             const savedPhone = localStorage.getItem('phone');
+            const savedAge = localStorage.getItem('age');
+            const savedGender = localStorage.getItem('selectedGender');
 
             if (savedName) document.getElementById('name').value = savedName;
             if (savedPhone) document.getElementById('phone').value = savedPhone;
+            if (savedAge) document.getElementById('age').value = savedAge;
+            if (savedGender) {
+                const genderButton = savedGender === '男の子'
+                    ? document.getElementById('genderMale')
+                    : (savedGender === '女の子' ? document.getElementById('genderFemale') : null);
+                if (genderButton) {
+                    genderButton.classList.add('active');
+                    selectedGender = savedGender;
+                }
+            }
         });
 
         // スムーズスクロール
@@ -1041,8 +1063,13 @@
 
 function updateDisplayInfo() {
     const name = document.getElementById('name').value;
+    const age = document.getElementById('age').value;
 
     const labelStyle = "color:#0c0c0c; font-size:14px; border:1px solid #0c0c0c; padding:0px 3px; border-radius:4px;";
+
+    const genderText = selectedGender
+        ? `<span style="${labelStyle}"><strong>性別</strong></span> ${selectedGender}`
+        : '・性別が未選択です';
 
     const visitCountText = visitCount
         ? `<span style="${labelStyle}"><strong>来店回数</strong></span> ${visitCount}`
@@ -1074,8 +1101,18 @@ function updateDisplayInfo() {
     // 修正ボタン付きのHTMLを作成
     document.getElementById('displayInfo').innerHTML = `
         <div class="info-row">
-            <p><span style="${labelStyle}"><strong>お名前</strong></span> ${name}</p>
+            <p><span style="${labelStyle}"><strong>お子様名</strong></span> ${name}</p>
             <button class="edit-button" onclick="scrollToElement('name')">修正</button>
+        </div>
+        <hr>
+        <div class="info-row">
+            <p><span style="${labelStyle}"><strong>年齢</strong></span> ${age}</p>
+            <button class="edit-button" onclick="scrollToElement('age')">修正</button>
+        </div>
+        <hr>
+        <div class="info-row">
+            <p>${genderText}</p>
+            <button class="edit-button" onclick="scrollToElement('genderMale')">修正</button>
         </div>
         <hr>
         <div class="info-row">
@@ -1111,6 +1148,7 @@ function updateDisplayInfo() {
 
         // 各ボタンや入力フィールドでupdateDisplayInfoを呼び出すようにする
         document.getElementById('name').addEventListener('input', updateDisplayInfo);
+        document.getElementById('age').addEventListener('input', updateDisplayInfo);
         document.querySelectorAll('.visit-buttons button').forEach(button => {
             button.addEventListener('click', updateDisplayInfo);
         });
@@ -1288,6 +1326,16 @@ function updateDisplayInfo() {
             fetchAvailability(currentDate);
         }
 
+        // お子様の性別を選択する関数
+        function selectGender(element) {
+            document.getElementById('genderMale').classList.remove('active');
+            document.getElementById('genderFemale').classList.remove('active');
+            element.classList.add('active');
+            selectedGender = element.innerText;
+            localStorage.setItem('selectedGender', selectedGender);
+            updateDisplayInfo();
+        }
+
         // メニューの選択を保存する関数
         function selectMenu(element) {
             element.classList.toggle('selected');
@@ -1391,6 +1439,8 @@ function updateDisplayInfo() {
         function submitForm() {
             const formData = {
                 name: document.getElementById('name').value.trim(),
+                age: document.getElementById('age').value.trim(),
+                gender: selectedGender,
                 phone: document.getElementById('phone').value.trim(),
                 visitCount: visitCount,
                 selectedMenu: selectedMenu,
@@ -1401,7 +1451,17 @@ function updateDisplayInfo() {
 
             // フォームデータのチェック
             if (!formData.name) {
-                alert('お名前を入力してください。');
+                alert('お子様名を入力してください。');
+                return;
+            }
+
+            if (!formData.age) {
+                alert('お子様の年齢を入力してください。');
+                return;
+            }
+
+            if (!formData.gender) {
+                alert('お子様の性別を選択してください。');
                 return;
             }
 
@@ -1418,7 +1478,7 @@ function updateDisplayInfo() {
             // LINEトークにメッセージを送信
             liff.sendMessages([{
                 type: 'text',
-                text: `【予約フォーム】\nお名前：${formData.name}\n電話番号：${formData.phone}\nご来店回数：${formData.visitCount}\nコース：${formData.selectedMenu}\nメニュー：${formData.selectedSymptom}\n希望日時：\n ${formData.dates[0]}\nメッセージ：${formData.message}`
+                text: `【予約フォーム】\nお子様名：${formData.name}\nお子様の年齢：${formData.age}\nお子様の性別：${formData.gender}\n電話番号：${formData.phone}\nご来店回数：${formData.visitCount}\nコース：${formData.selectedMenu}\nメニュー：${formData.selectedSymptom}\n希望日時：\n ${formData.dates[0]}\nメッセージ：${formData.message}`
             }]).then(() => {
                 /* メッセージ送信成功時の処理 */
                 alert('当日キャンセルは無いようにお願いいたします。');
@@ -1450,7 +1510,7 @@ function updateDisplayInfo() {
                 return;
             }
 
-            const url = 'https://script.google.com/macros/s/AKfycbzaL2YkGnoIE9UNyge2hh5_iKKYtQmcTOVb6CaXcgYe0ux86uN6B56aai4Cscx3M4K05A/exec' +
+            const url = 'https://script.google.com/macros/s/AKfycbx2SiFwHfpzzxqhZ1AdUJ-g9X-QQwNrhYYSTIvKEb2NRtN00tThhwYp8HaoPSwDWjShgw/exec' +
                 `?startTime=${startTime.toISOString()}&endTime=${endTime.toISOString()}`;
 
             try {
