@@ -803,6 +803,9 @@
 
         <input type="text" id="name" placeholder="お子様のお名前を入力してください" oninput="saveInput('name')">
 
+        <div class="label">ふりがな<span class="required">必須</span></div>
+        <input type="text" id="furigana" placeholder="ふりがなをご記入ください" oninput="saveInput('furigana')">
+
         <div class="label">お子様の年齢<span class="required">必須</span></div>
         <input type="text" id="age" placeholder="お子様の年齢を入力してください" oninput="saveInput('age')">
 
@@ -963,11 +966,13 @@
         // ページが読み込まれたときに前回の入力内容を復元
         document.addEventListener('DOMContentLoaded', function () {
             const savedName = localStorage.getItem('name');
+            const savedFurigana = localStorage.getItem('furigana');
             const savedPhone = localStorage.getItem('phone');
             const savedAge = localStorage.getItem('age');
             const savedGender = localStorage.getItem('selectedGender');
 
             if (savedName) document.getElementById('name').value = savedName;
+            if (savedFurigana) document.getElementById('furigana').value = savedFurigana;
             if (savedPhone) document.getElementById('phone').value = savedPhone;
             if (savedAge) document.getElementById('age').value = savedAge;
             if (savedGender) {
@@ -1063,6 +1068,7 @@
 
 function updateDisplayInfo() {
     const name = document.getElementById('name').value;
+    const furigana = document.getElementById('furigana').value;
     const age = document.getElementById('age').value;
 
     const labelStyle = "color:#0c0c0c; font-size:14px; border:1px solid #0c0c0c; padding:0px 3px; border-radius:4px;";
@@ -1103,6 +1109,11 @@ function updateDisplayInfo() {
         <div class="info-row">
             <p><span style="${labelStyle}"><strong>お子様名</strong></span> ${name}</p>
             <button class="edit-button" onclick="scrollToElement('name')">修正</button>
+        </div>
+        <hr>
+        <div class="info-row">
+            <p><span style="${labelStyle}"><strong>ふりがな</strong></span> ${furigana}</p>
+            <button class="edit-button" onclick="scrollToElement('furigana')">修正</button>
         </div>
         <hr>
         <div class="info-row">
@@ -1148,6 +1159,7 @@ function updateDisplayInfo() {
 
         // 各ボタンや入力フィールドでupdateDisplayInfoを呼び出すようにする
         document.getElementById('name').addEventListener('input', updateDisplayInfo);
+        document.getElementById('furigana').addEventListener('input', updateDisplayInfo);
         document.getElementById('age').addEventListener('input', updateDisplayInfo);
         document.querySelectorAll('.visit-buttons button').forEach(button => {
             button.addEventListener('click', updateDisplayInfo);
@@ -1439,6 +1451,7 @@ function updateDisplayInfo() {
         function submitForm() {
             const formData = {
                 name: document.getElementById('name').value.trim(),
+                furigana: document.getElementById('furigana').value.trim(),
                 age: document.getElementById('age').value.trim(),
                 gender: selectedGender,
                 phone: document.getElementById('phone').value.trim(),
@@ -1452,6 +1465,11 @@ function updateDisplayInfo() {
             // フォームデータのチェック
             if (!formData.name) {
                 alert('お子様名を入力してください。');
+                return;
+            }
+
+            if (!formData.furigana) {
+                alert('ふりがなを入力してください。');
                 return;
             }
 
@@ -1478,7 +1496,7 @@ function updateDisplayInfo() {
             // LINEトークにメッセージを送信
             liff.sendMessages([{
                 type: 'text',
-                text: `【予約フォーム】\nお子様名：${formData.name}\nお子様の年齢：${formData.age}\nお子様の性別：${formData.gender}\n電話番号：${formData.phone}\nご来店回数：${formData.visitCount}\nコース：${formData.selectedMenu}\nメニュー：${formData.selectedSymptom}\n希望日時：\n ${formData.dates[0]}\nメッセージ：${formData.message}`
+                text: `【予約フォーム】\nお子様名：${formData.name}\nふりがな：${formData.furigana}\nお子様の年齢：${formData.age}\nお子様の性別：${formData.gender}\n電話番号：${formData.phone}\nご来店回数：${formData.visitCount}\nコース：${formData.selectedMenu}\nメニュー：${formData.selectedSymptom}\n希望日時：\n ${formData.dates[0]}\nメッセージ：${formData.message}`
             }]).then(() => {
                 /* メッセージ送信成功時の処理 */
                 alert('当日キャンセルは無いようにお願いいたします。');
