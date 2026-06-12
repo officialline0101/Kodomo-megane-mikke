@@ -1669,7 +1669,8 @@ for (let i = 0; i < 7; i++) {
             return slot.title !== "営業日" && eventStart < slotEnd && eventEnd > slotStart;
         });
 
-        // 同時刻に3件以上予約があると✕
+        // 土曜日は2件あると✕（既存1件まで許可）、それ以外は1件あると✕（既存0件のみ許可）
+        const overlapLimit = day.getDay() === 6 ? 3 : 2;
         let overLimit = false;
         for (let checkTime = new Date(slotStart.getTime()); checkTime < slotEnd; checkTime.setMinutes(checkTime.getMinutes() + 1)) {
             let overlapping = 1; // 自予約を含む
@@ -1680,7 +1681,7 @@ for (let i = 0; i < 7; i++) {
                     overlapping++;
                 }
             });
-            if (overlapping >= 3) {
+            if (overlapping >= overlapLimit) {
                 overLimit = true;
                 break;
             }
